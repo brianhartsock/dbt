@@ -498,3 +498,28 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(obj, DECIMALS):
             return float(obj)
         return super(JSONEncoder, self).default(obj)
+
+
+def translate_aliases(kwargs, aliases):
+    """Given a dict of keyword arguments and a dict mapping aliases to their
+    canonical values, canonicalize the keys in the kwargs dict.
+
+    :return: A dict continaing all the values in kwargs referenced by their
+        canonical key.
+    :raises: `AliasException`, if a canonical key is defined more than once.
+    """
+    result = {}
+
+    for given_key, value in kwargs.items():
+        canonical_key = aliases.get(given_key, given_key)
+        if canonical_key in result:
+            # dupe found: go through the dict so we can have a nice-ish error
+            key_names = ', '.join("{}".format(k) for k in kwargs if
+                                  aliases.get(k) == canonical_key)
+
+            raise AliasException('Got duplicate keys: ({}) all map to "{}"'
+                                 .format(key_names, canonical_key))
+
+        result[canonical_key] = value
+
+    return result

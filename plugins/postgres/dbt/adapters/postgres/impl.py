@@ -57,7 +57,7 @@ class PostgresAdapter(SQLAdapter):
         results = cursor.fetchall()
 
         return [self.Relation.create(
-            database=self.config.credentials.dbname,
+            database=self.config.credentials.database,
             schema=_schema,
             identifier=name,
             quote_policy={

@@ -125,6 +125,10 @@ class JSONValidationException(ValidationException):
         return (JSONValidationException, (self.typename, self.errors))
 
 
+class AliasException(ValidationException):
+    pass
+
+
 class ParsingException(Exception):
     pass
 

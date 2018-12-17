@@ -21,7 +21,7 @@ BIGQUERY_CREDENTIALS_CONTRACT = {
         'method': {
             'enum': ['oauth', 'service-account', 'service-account-json'],
         },
-        'project': {
+        'database': {
             'type': 'string',
         },
         'schema': {
@@ -40,19 +40,23 @@ BIGQUERY_CREDENTIALS_CONTRACT = {
             'type': 'string',
         },
     },
-    'required': ['method', 'project', 'schema'],
+    'required': ['method', 'database', 'schema'],
 }
 
 
 class BigQueryCredentials(Credentials):
     SCHEMA = BIGQUERY_CREDENTIALS_CONTRACT
+    ALIASES = {
+        'project': 'database',
+        'dataset': 'schema',
+    }
 
     @property
     def type(self):
         return 'bigquery'
 
     def _connection_keys(self):
-        return ('method', 'project', 'schema', 'location')
+        return ('method', 'database', 'schema', 'location')
 
 
 class BigQueryConnectionManager(BaseConnectionManager):
@@ -128,7 +132,7 @@ class BigQueryConnectionManager(BaseConnectionManager):
 
     @classmethod
     def get_bigquery_client(cls, profile_credentials):
-        project_name = profile_credentials.project
+        project_name = profile_credentials.database
         creds = cls.get_bigquery_credentials(profile_credentials)
         location = getattr(profile_credentials, 'location', None)
         return google.cloud.bigquery.Client(project_name, creds,

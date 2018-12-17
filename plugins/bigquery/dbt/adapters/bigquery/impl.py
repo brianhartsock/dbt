@@ -276,7 +276,7 @@ class BigQueryAdapter(BaseAdapter):
             return None
 
         return self.Relation.create(
-            project=bq_table.project,
+            database=bq_table.project,
             schema=bq_table.dataset_id,
             identifier=bq_table.table_id,
             quote_policy={
@@ -299,14 +299,6 @@ class BigQueryAdapter(BaseAdapter):
         else:
             raise dbt.exceptions.NotImplementedException(
                 '`add_query` is not implemented for this adapter!')
-
-    def quote_schema_and_table(self, schema, table, model_name=None):
-        return self.render_relation(self.quote(schema), self.quote(table))
-
-    def render_relation(cls, schema, table):
-        connection = self.connections.get(None)
-        project = connection.credentials.project
-        return '{}.{}.{}'.format(self.quote(project), schema, table)
 
     ###
     # Special bigquery adapter methods
@@ -348,7 +340,7 @@ class BigQueryAdapter(BaseAdapter):
         bq_table = query_job.destination
 
         return self.Relation.create(
-            project=bq_table.project,
+            database=bq_table.project,
             schema=bq_table.dataset_id,
             identifier=bq_table.table_id,
             quote_policy={

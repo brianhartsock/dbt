@@ -15,7 +15,7 @@ from dbt.compat import abstractclassmethod, classmethod
 from dbt.contracts.connection import Connection
 from dbt.logger import GLOBAL_LOGGER as logger
 from dbt.schema import Column
-from dbt.utils import filter_null_values
+from dbt.utils import filter_null_values, translate_aliases
 
 from dbt.adapters.base.meta import AdapterMeta, available, available_raw
 from dbt.adapters.base import BaseRelation

@@ -14,7 +14,7 @@ class SnowflakeRelation(BaseRelation):
             'identifier': False,
         },
         'include_policy': {
-            'database': False,
+            'database': True,
             'schema': True,
             'identifier': True,
         }

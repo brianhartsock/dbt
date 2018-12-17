@@ -1629,17 +1629,19 @@ class TestDocsGenerate(DBTIntegrationTest):
         """
         schema = self.unique_schema()
 
+        compiled_database = self._quote(self.config.credentials.database)
         compiled_schema = self._quote(schema) if quote_schema else schema
         compiled_seed = self._quote('seed') if quote_model else 'seed'
 
         if self.adapter_type == 'bigquery':
             status = 'OK'
             compiled_sql = '\n\nselect * from `{}`.`{}`.seed'.format(
-                self.config.credentials.project, schema
+                self.config.credentials.database, schema
             )
         else:
-            compiled_sql = '\n\nselect * from {}.{}'.format(compiled_schema,
-                                                            compiled_seed)
+            compiled_sql = '\n\nselect * from {}.{}.{}'.format(
+                compiled_database, compiled_schema, compiled_seed
+            )
 
         return [
             {
@@ -1883,6 +1885,8 @@ class TestDocsGenerate(DBTIntegrationTest):
             '__dbt__CTE__ephemeral_copy\ngroup by first_name\n'
             'order by first_name asc'
         )
+
+        # TODO: This select should include the database, right?
         cte_sql = (
             ' __dbt__CTE__ephemeral_copy as (\n\n\nselect * from {}.seed\n)'
         ).format(my_schema_name)
@@ -1894,9 +1898,9 @@ class TestDocsGenerate(DBTIntegrationTest):
         ).format(cte_sql)
 
         view_compiled_sql = (
-            '\n\nselect first_name, ct from "{}".ephemeral_summary\n'
+            '\n\nselect first_name, ct from "{}"."{}".ephemeral_summary\n'
             'order by ct asc'
-        ).format(my_schema_name)
+        ).format(self.config.credentials.database, my_schema_name)
 
         return [
             {
