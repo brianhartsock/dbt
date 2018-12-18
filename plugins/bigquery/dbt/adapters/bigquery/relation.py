@@ -22,26 +22,6 @@ class BigQueryRelation(BaseRelation):
         }
     }
 
-    PATH_SCHEMA = {
-        'type': 'object',
-        'properties': {
-            'database': {'type': ['string', 'null']},
-            'schema': {'type': ['string', 'null']},
-            'identifier': {'type': 'string'},
-        },
-        'required': ['database', 'schema', 'identifier'],
-    }
-
-    POLICY_SCHEMA = {
-        'type': 'object',
-        'properties': {
-            'database': {'type': 'boolean'},
-            'schema': {'type': 'boolean'},
-            'identifier': {'type': 'boolean'},
-        },
-        'required': ['database', 'schema', 'identifier'],
-    }
-
     SCHEMA = {
         'type': 'object',
         'properties': {
@@ -57,16 +37,14 @@ class BigQueryRelation(BaseRelation):
             'type': {
                 'enum': BaseRelation.RelationTypes + [External, None],
             },
-            'path': PATH_SCHEMA,
-            'include_policy': POLICY_SCHEMA,
-            'quote_policy': POLICY_SCHEMA,
+            'path': BaseRelation.PATH_SCHEMA,
+            'include_policy': BaseRelation.POLICY_SCHEMA,
+            'quote_policy': BaseRelation.POLICY_SCHEMA,
             'quote_character': {'type': 'string'},
         },
         'required': ['metadata', 'type', 'path', 'include_policy',
                      'quote_policy', 'quote_character']
     }
-
-    PATH_ELEMENTS = ['database', 'schema', 'identifier']
 
     def matches(self, database=None, schema=None, identifier=None):
         search = filter_null_values({

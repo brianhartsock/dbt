@@ -22,7 +22,9 @@ class PostgresAdapter(SQLAdapter):
         return 'datenow()'
 
     def _link_cached_relations(self, manifest):
-        schemas = manifest.get_used_schemas()
+        # on postgres, we can just ignore the databases
+        schemas = {s for _, s in manifest.get_used_schemas()}
+
         try:
             table = self.execute_macro(manifest, GET_RELATIONS_MACRO_NAME)
         finally:

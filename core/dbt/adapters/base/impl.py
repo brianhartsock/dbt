@@ -192,8 +192,8 @@ class BaseAdapter(object):
 
         relations = []
         # add all relations
-        for schema in schemas:
-            for relation in self.list_relations_without_caching(schema):
+        for db, schema in schemas:
+            for relation in self.list_relations_without_caching(db, schema):
                 self.cache.add(relation)
         # it's possible that there were no relations in some schemas. We want
         # to insert the schemas we query into the cache's `.schemas` attribute
@@ -408,15 +408,17 @@ class BaseAdapter(object):
         return self.get_columns_in_relation(relation, model_name=model_name)
 
     @available
-    def expand_target_column_types(self, temp_table, to_schema, to_table,
-                                   model_name=None):
+    def expand_target_column_types(self, temp_table, to_database, to_schema,
+                                   to_table, model_name=None):
         goal = self.Relation.create(
+            database=None,
             schema=None,
             identifier=temp_table,
             type='table',
             quote_policy=self.config.quoting
         )
         current = self.Relation.create(
+            database=to_database,
             schema=to_schema,
             identifier=to_table,
             type='table',

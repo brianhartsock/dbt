@@ -181,7 +181,7 @@ class BaseRelation(APIObject):
         quote_policy = dbt.utils.merge(config.quoting, quote_policy)
 
         return cls.create(
-            database=config.credentials.database,
+            database=node.get('database'),
             schema=node.get('schema'),
             identifier=node.get('alias'),
             table_name=table_name,
