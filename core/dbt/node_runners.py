@@ -216,7 +216,7 @@ class BaseRunner(object):
         schemas = set()
         for node in manifest.nodes.values():
             if cls.is_refable(node) and not cls.is_ephemeral(node):
-                schemas.add(node['schema'])
+                schemas.add((node.database, node.schema))
 
         return schemas
 
@@ -289,19 +289,24 @@ class CompileRunner(BaseRunner):
     @classmethod
     def _node_context(cls, adapter, node):
 
-        def call_get_columns_in_table(schema_name, table_name):
+        def call_get_columns_in_table(database_name, schema_name, table_name):
             return adapter.get_columns_in_table(
-                schema_name, table_name, model_name=node.alias
+                database_name, schema_name, table_name, model_name=node.alias
             )
 
-        def call_get_missing_columns(from_schema, from_table,
-                                     to_schema, to_table):
+        def call_get_missing_columns(from_database, from_schema, from_table,
+                                     to_database, to_schema, to_table):
             return adapter.get_missing_columns(
-                from_schema, from_table, to_schema, to_table, node.alias
+                from_database, from_schema, from_table,
+                to_database, to_schema, to_table,
+                node.alias
             )
 
-        def call_already_exists(schema, table):
-            return adapter.already_exists(schema, table, node.alias)
+        def call_already_exists(database, schema, table):
+            return adapter.already_exists(database, schema, table, node.alias)
+
+        def call_relation_already_exists(relation):
+            return adapter.relation_already_exists(relation, node.alias)
 
         return {
             "run_started_at": dbt.tracking.active_user.run_started_at,
@@ -309,6 +314,7 @@ class CompileRunner(BaseRunner):
             "get_columns_in_table": call_get_columns_in_table,
             "get_missing_columns": call_get_missing_columns,
             "already_exists": call_already_exists,
+            "relation_already_exists": call_relation_already_exists,
         }
 
 
@@ -371,12 +377,20 @@ class ModelRunner(CompileRunner):
         # is the one defined in the profile. Create this schema if it
         # does not exist, otherwise subsequent queries will fail. Generally,
         # dbt expects that this schema will exist anyway.
-        required_schemas.add(adapter.get_default_schema())
+        required_schemas.add(
+            (config.credentials.database, config.credentials.schema)
+        )
 
-        existing_schemas = set(adapter.list_schemas())
+        required_databases = set(db for db, _ in required_schemas)
 
-        for schema in (required_schemas - existing_schemas):
-            adapter.create_schema(schema)
+        # TODO: on some(all?) adapters we can do this in one call if we change
+        # list_schemas appropriately
+        existing_schemas = set()
+        for db in required_databases:
+            existing_schemas.update((db, s) for s in adapter.list_schemas(db))
+
+        for database, schema in (required_schemas - existing_schemas):
+            adapter.create_schema(database, schema)
 
     @classmethod
     def populate_adapter_cache(cls, config, adapter, manifest):
@@ -524,8 +538,8 @@ class ArchiveRunner(ModelRunner):
 
     def describe_node(self):
         cfg = self.node.get('config', {})
-        return "archive {source_schema}.{source_table} --> "\
-               "{target_schema}.{target_table}".format(**cfg)
+        return "archive {source_database}.{source_schema}.{source_table} --> "\
+               "{target_database}.{target_schema}.{target_table}".format(**cfg)
 
     def print_result_line(self, result):
         dbt.ui.printer.print_archive_result_line(result, self.node_index,
@@ -535,8 +549,7 @@ class ArchiveRunner(ModelRunner):
 class SeedRunner(ModelRunner):
 
     def describe_node(self):
-        schema_name = self.node.schema
-        return "seed file {}.{}".format(schema_name, self.node.alias)
+        return "seed file {0.database}.{0.schema}.{0.alias}".format(self.node)
 
     def before_execute(self):
         description = self.describe_node()

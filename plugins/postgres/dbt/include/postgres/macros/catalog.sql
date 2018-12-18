@@ -6,6 +6,7 @@
     with table_owners as (
 
         select
+            "{{ database }}" as table_database,
             schemaname as table_schema,
             tablename as table_name,
             tableowner as table_owner
@@ -15,6 +16,7 @@
         union all
 
         select
+            "{{ database }}" as table_database,
             schemaname as table_schema,
             viewname as table_name,
             viewowner as table_owner
@@ -26,7 +28,7 @@
     tables as (
 
         select
-
+            "{{ database }}" as table_database,
             table_schema,
             table_name,
             table_type
@@ -38,6 +40,7 @@
     columns as (
 
         select
+            table_catalog as table_database,
             table_schema,
             table_name,
             null as table_comment,
@@ -52,8 +55,8 @@
 
     select *
     from tables
-    join columns using (table_schema, table_name)
-    join table_owners using (table_schema, table_name)
+    join columns using (table_database, table_schema, table_name)
+    join table_owners using (table_database, table_schema, table_name)
 
     where table_schema != 'information_schema'
       and table_schema not like 'pg_%'

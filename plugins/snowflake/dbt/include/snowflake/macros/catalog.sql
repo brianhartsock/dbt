@@ -6,6 +6,7 @@
     with tables as (
 
         select
+            table_catalog as "table_database",
             table_schema as "table_schema",
             table_name as "table_name",
             table_type as "table_type",
@@ -35,7 +36,7 @@
     columns as (
 
         select
-
+            table_catalog as "table_database",
             table_schema as "table_schema",
             table_name as "table_name",
             null as "table_comment",
@@ -51,8 +52,9 @@
 
     select *
     from tables
-    join columns using ("table_schema", "table_name")
+    join columns using ("table_database", "table_schema", "table_name")
     where "table_schema" != 'INFORMATION_SCHEMA'
+      and "table_database" = {{ adapter.quote_as_configured(database, "database") }}
     order by "column_index"
 
   {%- endcall -%}

@@ -64,7 +64,9 @@ class BigQueryAdapter(BaseAdapter):
         return False
 
     def drop_relation(self, relation, model_name=None):
-        if self._schema_is_cached(relation.schema, model_name):
+        is_cached = self._schema_is_cached(relation.database, relation.schema,
+                                           model_name)
+        if is_cached:
             self.cache.drop(relation)
 
         conn = self.connections.get(model_name)
@@ -95,6 +97,7 @@ class BigQueryAdapter(BaseAdapter):
     def get_columns_in_relation(self, relation, model_name=None):
         try:
             table = self.connections.get_bq_table(
+                database=relation.database,
                 schema=relation.schema,
                 identifier=relation.table_name,
                 conn_name=model_name
@@ -109,11 +112,13 @@ class BigQueryAdapter(BaseAdapter):
         # This is a no-op on BigQuery
         pass
 
-    def list_relations_without_caching(self, schema, model_name=None):
+    def list_relations_without_caching(self, database, schema,
+                                       model_name=None):
         connection = self.connections.get(model_name)
         client = connection.handle
 
-        bigquery_dataset = self.connections.dataset(schema, connection)
+        bigquery_dataset = self.connections.dataset(schema, connection,
+                                                    project=database)
 
         all_tables = client.list_tables(
             bigquery_dataset,
@@ -134,11 +139,12 @@ class BigQueryAdapter(BaseAdapter):
         except google.api_core.exceptions.NotFound as e:
             return []
 
-    def get_relation(self, schema, identifier, model_name=None):
-        if self._schema_is_cached(schema, model_name):
+    def get_relation(self, database, schema, identifier, model_name=None):
+        if self._schema_is_cached(database, schema, model_name):
             # if it's in the cache, use the parent's model of going through
             # the relations cache and picking out the relation
             return super(BigQueryAdapter, self).get_relation(
+                database=database,
                 schema=schema,
                 identifier=identifier,
                 model_name=model_name
@@ -150,16 +156,16 @@ class BigQueryAdapter(BaseAdapter):
             table = None
         return self._bq_table_to_relation(table)
 
-    def create_schema(self, schema, model_name=None):
-        logger.debug('Creating schema "%s".', schema)
-        self.connections.create_dataset(schema, model_name)
+    def create_schema(self, database, schema, model_name=None):
+        logger.debug('Creating schema "%s.%s".', database, schema)
+        self.connections.create_dataset(database, schema, model_name)
 
-    def drop_schema(self, schema, model_name=None):
-        logger.debug('Dropping schema "%s".', schema)
+    def drop_schema(self, database, schema, model_name=None):
+        logger.debug('Dropping schema "%s.%s".', database, schema)
 
-        if not self.check_schema_exists(schema, model_name):
+        if not self.check_schema_exists(database, schema, model_name):
             return
-        self.connections.drop_dataset(schema, model_name)
+        self.connections.drop_dataset(database, schema, model_name)
 
     @classmethod
     def quote(cls, identifier):
@@ -369,13 +375,14 @@ class BigQueryAdapter(BaseAdapter):
         client.update_table(new_table, ['schema'])
 
     @available
-    def load_dataframe(self, schema, table_name, agate_table, column_override,
-                       model_name=None):
+    def load_dataframe(self, database, schema, table_name, agate_table,
+                       column_override, model_name=None):
         bq_schema = self._agate_to_schema(agate_table, column_override)
         conn = self.connections.get(model_name)
         client = conn.handle
 
-        table = self.connections.table_ref(schema, table_name, conn)
+        table = self.connections.table_ref(schema, table_name, conn,
+                                           project=database)
 
         load_config = google.cloud.bigquery.LoadJobConfig()
         load_config.skip_leading_rows = 1
@@ -460,12 +467,10 @@ class BigQueryAdapter(BaseAdapter):
         connection = self.connections.get('catalog')
         client = connection.handle
 
-        schemas = {
-            node.to_dict()['schema']
-            for node in manifest.nodes.values()
-        }
+        schemas = manifest.get_used_schemas()
 
         column_names = (
+            'table_database',
             'table_schema',
             'table_name',
             'table_type',
@@ -480,8 +485,8 @@ class BigQueryAdapter(BaseAdapter):
         all_names = column_names + self._get_stats_column_names()
         columns = []
 
-        for schema_name in schemas:
-            relations = self.list_relations(schema_name)
+        for database_name, schema_name in schemas:
+            relations = self.list_relations(database_name, schema_name)
             for relation in relations:
 
                 # This relation contains a subset of the info we care about.
@@ -489,7 +494,8 @@ class BigQueryAdapter(BaseAdapter):
                 table_ref = self.connections.table_ref(
                     relation.schema,
                     relation.identifier,
-                    connection
+                    connection,
+                    project=database_name
                 )
                 table = client.get_table(table_ref)
 
@@ -499,6 +505,7 @@ class BigQueryAdapter(BaseAdapter):
 
                 for index, column in enumerate(flattened, start=1):
                     column_data = (
+                        relation.database,
                         relation.schema,
                         relation.name,
                         relation.type,

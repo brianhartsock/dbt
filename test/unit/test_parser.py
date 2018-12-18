@@ -189,6 +189,7 @@ class ParserTest(BaseParserTest):
                 'model.root.model_one': ParsedNode(
                     alias='model_one',
                     name='model_one',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.model_one',
@@ -251,6 +252,7 @@ class ParserTest(BaseParserTest):
                 'model.root.model_one': ParsedNode(
                     alias='model_one',
                     name='model_one',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.model_one',
@@ -299,6 +301,7 @@ class ParserTest(BaseParserTest):
                 'model.root.model_one': ParsedNode(
                     alias='model_one',
                     name='model_one',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.model_one',
@@ -354,6 +357,7 @@ class ParserTest(BaseParserTest):
                 'model.root.base': ParsedNode(
                     alias='base',
                     name='base',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.base',
@@ -379,6 +383,7 @@ class ParserTest(BaseParserTest):
                 'model.root.events_tx': ParsedNode(
                     alias='events_tx',
                     name='events_tx',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.events_tx',
@@ -462,6 +467,7 @@ class ParserTest(BaseParserTest):
                 'model.root.events': ParsedNode(
                     alias='events',
                     name='events',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.events',
@@ -486,6 +492,7 @@ class ParserTest(BaseParserTest):
                 'model.root.sessions': ParsedNode(
                     alias='sessions',
                     name='sessions',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.sessions',
@@ -510,6 +517,7 @@ class ParserTest(BaseParserTest):
                 'model.root.events_tx': ParsedNode(
                     alias='events_tx',
                     name='events_tx',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.events_tx',
@@ -534,6 +542,7 @@ class ParserTest(BaseParserTest):
                 'model.root.sessions_tx': ParsedNode(
                     alias='sessions_tx',
                     name='sessions_tx',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.sessions_tx',
@@ -558,6 +567,7 @@ class ParserTest(BaseParserTest):
                 'model.root.multi': ParsedNode(
                     alias='multi',
                     name='multi',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.multi',
@@ -643,6 +653,7 @@ class ParserTest(BaseParserTest):
                 'model.snowplow.events': ParsedNode(
                     alias='events',
                     name='events',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.snowplow.events',
@@ -667,6 +678,7 @@ class ParserTest(BaseParserTest):
                 'model.snowplow.sessions': ParsedNode(
                     alias='sessions',
                     name='sessions',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.snowplow.sessions',
@@ -691,6 +703,7 @@ class ParserTest(BaseParserTest):
                 'model.snowplow.events_tx': ParsedNode(
                     alias='events_tx',
                     name='events_tx',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.snowplow.events_tx',
@@ -715,6 +728,7 @@ class ParserTest(BaseParserTest):
                 'model.snowplow.sessions_tx': ParsedNode(
                     alias='sessions_tx',
                     name='sessions_tx',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.snowplow.sessions_tx',
@@ -739,6 +753,7 @@ class ParserTest(BaseParserTest):
                 'model.root.multi': ParsedNode(
                     alias='multi',
                     name='multi',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.multi',
@@ -771,6 +786,7 @@ class ParserTest(BaseParserTest):
                 'model.snowplow.events': {
                     'name': 'events',
                     'alias': 'events',
+                    'database': 'test',
                     'schema': 'analytics',
                     'resource_type': 'model',
                     'unique_id': 'model.snowplow.events',
@@ -792,6 +808,7 @@ class ParserTest(BaseParserTest):
                 'model.root.events': {
                     'name': 'events',
                     'alias': 'events',
+                    'database': 'test',
                     'schema': 'analytics',
                     'resource_type': 'model',
                     'unique_id': 'model.root.events',
@@ -813,6 +830,7 @@ class ParserTest(BaseParserTest):
                 'model.root.dep': {
                     'name': 'dep',
                     'alias': 'dep',
+                    'database': 'test',
                     'schema': 'analytics',
                     'resource_type': 'model',
                     'unique_id': 'model.root.dep',
@@ -851,6 +869,7 @@ class ParserTest(BaseParserTest):
                     'model.snowplow.events': {
                         'name': 'events',
                         'alias': 'events',
+                        'database': 'test',
                         'schema': 'analytics',
                         'resource_type': 'model',
                         'unique_id': 'model.snowplow.events',
@@ -875,6 +894,7 @@ class ParserTest(BaseParserTest):
                     'model.root.events': {
                         'name': 'events',
                         'alias': 'events',
+                        'database': 'test',
                         'schema': 'analytics',
                         'resource_type': 'model',
                         'unique_id': 'model.root.events',
@@ -899,6 +919,7 @@ class ParserTest(BaseParserTest):
                     'model.root.dep': {
                         'name': 'dep',
                         'alias': 'dep',
+                        'database': 'test',
                         'schema': 'analytics',
                         'resource_type': 'model',
                         'unique_id': 'model.root.dep',
@@ -952,6 +973,7 @@ class ParserTest(BaseParserTest):
                 'model.root.model_one': ParsedNode(
                     alias='model_one',
                     name='model_one',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.model_one',
@@ -1039,6 +1061,7 @@ class ParserTest(BaseParserTest):
                 'model.root.table': ParsedNode(
                     alias='table',
                     name='table',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.table',
@@ -1063,6 +1086,7 @@ class ParserTest(BaseParserTest):
                 'model.root.ephemeral': ParsedNode(
                     alias='ephemeral',
                     name='ephemeral',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.ephemeral',
@@ -1087,6 +1111,7 @@ class ParserTest(BaseParserTest):
                 'model.root.view': ParsedNode(
                     alias='view',
                     name='view',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.view',
@@ -1241,6 +1266,7 @@ class ParserTest(BaseParserTest):
                 'model.root.table': ParsedNode(
                     alias='table',
                     name='table',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.table',
@@ -1265,6 +1291,7 @@ class ParserTest(BaseParserTest):
                 'model.root.ephemeral': ParsedNode(
                     alias='ephemeral',
                     name='ephemeral',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.ephemeral',
@@ -1289,6 +1316,7 @@ class ParserTest(BaseParserTest):
                 'model.root.view': ParsedNode(
                     alias='view',
                     name='view',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.view',
@@ -1313,6 +1341,7 @@ class ParserTest(BaseParserTest):
                 'model.snowplow.multi_sort': ParsedNode(
                     alias='multi_sort',
                     name='multi_sort',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.snowplow.multi_sort',
@@ -1344,6 +1373,7 @@ class ParserTest(BaseParserTest):
                     original_file_path='disabled.sql',
                     root_path=get_os_path('/usr/src/app'),
                     raw_sql=("select * from events"),
+                    database='test',
                     schema='analytics',
                     refs=[],
                     depends_on={
@@ -1366,6 +1396,7 @@ class ParserTest(BaseParserTest):
                     original_file_path=get_os_path('views/package.sql'),
                     root_path=get_os_path('/usr/src/app'),
                     raw_sql=("select * from events"),
+                    database='test',
                     schema='analytics',
                     refs=[],
                     depends_on={
@@ -1414,6 +1445,7 @@ class ParserTest(BaseParserTest):
             ParsedNode(
                 alias='accepted_values_model_one_id__a__b',
                 name='accepted_values_model_one_id__a__b',
+                database='test',
                 schema='analytics',
                 resource_type='test',
                 unique_id='test.root.accepted_values_model_one_id__a__b', # noqa
@@ -1439,6 +1471,7 @@ class ParserTest(BaseParserTest):
             ParsedNode(
                 alias='not_null_model_one_id',
                 name='not_null_model_one_id',
+                database='test',
                 schema='analytics',
                 resource_type='test',
                 unique_id='test.root.not_null_model_one_id',
@@ -1463,6 +1496,7 @@ class ParserTest(BaseParserTest):
             ParsedNode(
                 alias='relationships_model_one_id__id__ref_model_two_',
                 name='relationships_model_one_id__id__ref_model_two_',
+                database='test',
                 schema='analytics',
                 resource_type='test',
                 unique_id='test.root.relationships_model_one_id__id__ref_model_two_', # noqa
@@ -1487,6 +1521,7 @@ class ParserTest(BaseParserTest):
             ParsedNode(
                 alias='unique_model_one_id',
                 name='unique_model_one_id',
+                database='test',
                 schema='analytics',
                 resource_type='test',
                 unique_id='test.root.unique_model_one_id',
@@ -1550,6 +1585,7 @@ class ParserTest(BaseParserTest):
             ParsedNode(
                 alias='accepted_values_model_one_id__a__b',
                 name='accepted_values_model_one_id__a__b',
+                database='test',
                 schema='analytics',
                 resource_type='test',
                 unique_id='test.root.accepted_values_model_one_id__a__b',
@@ -1573,6 +1609,7 @@ class ParserTest(BaseParserTest):
             ParsedNode(
                 alias='not_null_model_one_id',
                 name='not_null_model_one_id',
+                database='test',
                 schema='analytics',
                 resource_type='test',
                 unique_id='test.root.not_null_model_one_id',
@@ -1594,6 +1631,7 @@ class ParserTest(BaseParserTest):
             ParsedNode(
                 alias='relationships_model_one_id__id__ref_model_two_',
                 name='relationships_model_one_id__id__ref_model_two_',
+                database='test',
                 schema='analytics',
                 resource_type='test',
                 unique_id='test.root.relationships_model_one_id__id__ref_model_two_', # noqa
@@ -1616,6 +1654,7 @@ class ParserTest(BaseParserTest):
             ParsedNode(
                 alias='some_test_model_one_value',
                 name='some_test_model_one_value',
+                database='test',
                 schema='analytics',
                 resource_type='test',
                 unique_id='test.root.some_test_model_one_value',
@@ -1636,6 +1675,7 @@ class ParserTest(BaseParserTest):
             ParsedNode(
                 alias='unique_model_one_id',
                 name='unique_model_one_id',
+                database='test',
                 schema='analytics',
                 resource_type='test',
                 unique_id='test.root.unique_model_one_id',
@@ -1740,6 +1780,7 @@ class ParserTest(BaseParserTest):
                 'test.root.no_events': ParsedNode(
                     alias='no_events',
                     name='no_events',
+                    database='test',
                     schema='analytics',
                     resource_type='test',
                     unique_id='test.root.no_events',
@@ -1859,6 +1900,7 @@ class ParserTest(BaseParserTest):
                 'model.root.model_one': ParsedNode(
                     alias='model_one',
                     name='model_one',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.model_one',
@@ -1906,6 +1948,7 @@ class ParserTest(BaseParserTest):
                 'model.root.model_one': ParsedNode(
                     alias='model_one',
                     name='model_one',
+                    database='test',
                     schema='analytics',
                     resource_type='model',
                     unique_id='model.root.model_one',

@@ -135,19 +135,23 @@
 {% materialization archive, default %}
   {%- set config = model['config'] -%}
 
+  {%- set target_database = config.get('target_database') -%}
   {%- set target_schema = config.get('target_schema') -%}
   {%- set target_table = config.get('target_table') -%}
 
+  {%- set source_database = config.get('source_database') -%}
   {%- set source_schema = config.get('source_schema') -%}
   {%- set source_table = config.get('source_table') -%}
 
-  {{ create_schema(target_schema) }}
+  {{ create_schema(target_database, target_schema) }}
 
   {%- set source_relation = adapter.get_relation(
+      database=source_database,
       schema=source_schema,
       identifier=source_table) -%}
 
   {%- set target_relation = adapter.get_relation(
+      database=target_database,
       schema=target_schema,
       identifier=target_table) -%}
 
@@ -157,13 +161,14 @@
 
   {%- if target_relation is none -%}
     {%- set target_relation = api.Relation.create(
+        database=target_database,
         schema=target_schema,
         identifier=target_table) -%}
   {%- elif not target_relation.is_table -%}
     {{ exceptions.relation_wrong_type(target_relation, 'table') }}
   {%- endif -%}
 
-  {%- set source_columns = adapter.get_columns_in_table(source_schema, source_table) -%}
+  {%- set source_columns = adapter.get_columns_in_relation(source_relation) -%}
   {%- set unique_key = config.get('unique_key') -%}
   {%- set updated_at = config.get('updated_at') -%}
   {%- set dest_columns = source_columns + [

@@ -50,15 +50,18 @@ def _catalog_filter_schemas(manifest):
     """Return a function that takes a row and decides if the row should be
     included in the catalog output.
     """
-    schemas = frozenset(s.lower() for s in manifest.get_used_schemas())
+    schemas = frozenset((d.lower(), s.lower())
+                        for d, s in manifest.get_used_schemas())
 
     def test(row):
+        table_database = _expect_row_value('table_database', row)
         table_schema = _expect_row_value('table_schema', row)
         # the schema may be present but None, which is not an error and should
         # be filtered out
+        # TODO(jeb): Is there a similar issue with database?
         if table_schema is None:
             return False
-        return table_schema.lower() in schemas
+        return (table_database.lower(), table_schema.lower()) in schemas
     return test
 
 
@@ -160,14 +163,14 @@ class BaseAdapter(object):
     ###
     # Caching methods
     ###
-    def _schema_is_cached(self, schema, model_name=None):
+    def _schema_is_cached(self, database, schema, model_name=None):
         """Check if the schema is cached, and by default logs if it is not."""
         if dbt.flags.USE_CACHE is False:
             return False
-        elif schema not in self.cache:
+        elif (database, schema) not in self.cache:
             logger.debug(
-                'On "{}": cache miss for schema "{}", this is inefficient'
-                .format(model_name or '<None>', schema)
+                'On "{}": cache miss for schema "{}.{}", this is inefficient'
+                .format(model_name or '<None>', database, schema)
             )
             return False
         else:
@@ -243,16 +246,14 @@ class BaseAdapter(object):
             '`is_cancelable` is not implemented for this adapter!'
         )
 
-    def get_default_schema(self):
-        return self.config.credentials.schema
-
     ###
     # Abstract methods about schemas
     ###
     @abc.abstractmethod
-    def list_schemas(self, model_name=None):
+    def list_schemas(self, database, model_name=None):
         """Get a list of existing schemas.
 
+        :param str database: The name of the database to list under.
         :param Optional[str] model_name: The name of the connection to query as
         :return: All schemas that currently exist in the database
         :rtype: List[str]
@@ -261,7 +262,7 @@ class BaseAdapter(object):
             '`list_schemas` is not implemented for this adapter!'
         )
 
-    def check_schema_exists(self, schema, model_name=None):
+    def check_schema_exists(self, database, schema, model_name=None):
         """Check if a schema exists.
 
         The default implementation of this is potentially unnecessarily slow,
@@ -270,7 +271,7 @@ class BaseAdapter(object):
         """
         search = (
             s.lower() for s in
-            self.list_schemas(model_name=model_name)
+            self.list_schemas(database=database, model_name=model_name)
         )
         return schema.lower() in search
 
@@ -351,11 +352,13 @@ class BaseAdapter(object):
         )
 
     @abc.abstractmethod
-    def list_relations_without_caching(self, schema, model_name=None):
+    def list_relations_without_caching(self, database, schema,
+                                       model_name=None):
         """List relations in the given schema, bypassing the cache.
 
         This is used as the underlying behavior to fill the cache.
 
+        :param str database: The name of the database to list relations from.
         :param str schema: The name of the schema to list relations from.
         :param Optional[str] model_name: The name of the model to use for the
             connection.
@@ -371,21 +374,21 @@ class BaseAdapter(object):
     # Provided methods about relations
     ###
     @available
-    def get_missing_columns(self, from_schema, from_table, to_schema, to_table,
-                            model_name=None):
+    def get_missing_columns(self, from_database, from_schema, from_table,
+                            to_database, to_schema, to_table, model_name=None):
         """Returns dict of {column:type} for columns in from_table that are
         missing from to_table"""
         from_columns = {
             col.name: col for col in
             self.get_columns_in_table(
-                from_schema, from_table,
-                model_name=model_name)
+                from_database, from_schema, from_table, model_name=model_name
+            )
         }
         to_columns = {
             col.name: col for col in
             self.get_columns_in_table(
-                to_schema, to_table,
-                model_name=model_name)
+                to_database, to_schema, to_table, model_name=model_name
+            )
         }
 
         missing_columns = set(from_columns.keys()) - set(to_columns.keys())
@@ -396,12 +399,12 @@ class BaseAdapter(object):
         ]
 
     @available
-    def get_columns_in_table(self, schema_name, table_name, database=None,
+    def get_columns_in_table(self, database_name, schema_name, table_name,
                              model_name=None):
         relation = self.Relation.create(
+            database=database_name,
             schema=schema_name,
             identifier=table_name,
-            database=database,
             type='table',
             quote_policy=self.config.quoting
         )
@@ -426,14 +429,16 @@ class BaseAdapter(object):
         )
         self.expand_column_types(goal, current, model_name)
 
-    def list_relations(self, schema, model_name=None):
-        if self._schema_is_cached(schema, model_name):
-            return self.cache.get_relations(schema)
+    def list_relations(self, database, schema, model_name=None):
+        assert schema is not None
+        assert database is not None
+        if self._schema_is_cached(database, schema, model_name):
+            return self.cache.get_relations(database, schema)
 
         # we can't build the relations cache because we don't have a
         # manifest so we can't run any operations.
         relations = self.list_relations_without_caching(
-            schema, model_name=model_name
+            database, schema, model_name=model_name
         )
 
         logger.debug('with schema={}, model_name={}, relations={}'
@@ -441,19 +446,23 @@ class BaseAdapter(object):
         return relations
 
     @available
-    def query_for_existing(self, schemas, model_name=None):
+    def query_for_existing(self, database, schemas, model_name=None):
+        assert schema is not None
+        assert database is not None
         if not isinstance(schemas, (list, tuple)):
             schemas = [schemas]
 
         all_relations = []
 
         for schema in schemas:
-            all_relations.extend(self.list_relations(schema, model_name))
+            all_relations.extend(
+                self.list_relations(database, schema, model_name)
+            )
 
         return {relation.identifier: relation.type
                 for relation in all_relations}
 
-    def _make_match_kwargs(self, schema, identifier):
+    def _make_match_kwargs(self, database, schema, identifier):
         quoting = self.config.quoting
         if identifier is not None and quoting['identifier'] is False:
             identifier = identifier.lower()
@@ -461,14 +470,20 @@ class BaseAdapter(object):
         if schema is not None and quoting['schema'] is False:
             schema = schema.lower()
 
-        return filter_null_values({'identifier': identifier,
-                                   'schema': schema})
+        if database is not None and quoting['schema'] is False:
+            database = database.lower()
 
-    def _make_match(self, relations_list, schema, identifier):
+        return filter_null_values({
+            'database': database,
+            'identifier': identifier,
+            'schema': schema,
+        })
+
+    def _make_match(self, relations_list, database, schema, identifier):
 
         matches = []
 
-        search = self._make_match_kwargs(schema, identifier)
+        search = self._make_match_kwargs(database, schema, identifier)
 
         for relation in relations_list:
             if relation.matches(**search):
@@ -477,14 +492,23 @@ class BaseAdapter(object):
         return matches
 
     @available
-    def get_relation(self, schema, identifier, model_name=None):
-        relations_list = self.list_relations(schema, model_name)
+    def get_relation(self, database, schema, identifier, model_name=None):
+        assert schema is not None
+        assert database is not None
+        relations_list = self.list_relations(database, schema, model_name)
 
-        matches = self._make_match(relations_list, schema, identifier)
+        matches = self._make_match(relations_list, database, schema,
+                                   identifier)
 
         if len(matches) > 1:
+            kwargs = {
+                'identifier': identifier,
+                'schema': schema,
+                'database': database,
+            }
             dbt.exceptions.get_relation_returned_multiple_results(
-                {'identifier': identifier, 'schema': schema}, matches)
+                kwargs, matches
+            )
 
         elif matches:
             return matches[0]
@@ -497,7 +521,7 @@ class BaseAdapter(object):
     ###
     @abc.abstractmethod
     @available
-    def create_schema(self, schema, model_name=None):
+    def create_schema(self, database, schema, model_name=None):
         """Create the given schema if it does not exist.
 
         :param str schema: The schema name to create.
@@ -509,7 +533,7 @@ class BaseAdapter(object):
         )
 
     @abc.abstractmethod
-    def drop_schema(self, schema, model_name=None):
+    def drop_schema(self, database, schema, model_name=None):
         """Drop the given schema (and everything in it) if it exists.
 
         :param str schema: The schema name to drop.
@@ -521,9 +545,18 @@ class BaseAdapter(object):
         )
 
     @available
-    def already_exists(self, schema, table, model_name=None):
-        relation = self.get_relation(schema=schema, identifier=table)
+    def already_exists(self, database, schema, table, model_name=None):
+        relation = self.get_relation(database=database, schema=schema,
+                                     identifier=table)
         return relation is not None
+
+    @available
+    def relation_already_exists(self, relation, model_name=None):
+        return self.already_exists(
+            database=relation.database,
+            schema=relation.schema,
+            table=relation.identifier
+        )
 
     @available_raw
     @abstractclassmethod
@@ -657,8 +690,16 @@ class BaseAdapter(object):
     ###
     # Operations involving the manifest
     ###
-    def execute_macro(self, manifest, macro_name, project=None):
+    def execute_macro(self, manifest, macro_name, project=None, context=None):
         """Look macro_name up in the manifest and execute its results.
+
+        :param Manifest manifest: The manifest to use for generating the base
+            macro execution context.
+        :param str macro_name: The name of the macro to execute.
+        :param Optional[str] project: The name of the project to search in, or
+            None for the first match.
+        :param Optional[dict] context: An optional dict to update() the macro
+            execution context.
 
         Return an an AttrDict with three attributes: 'table', 'data', and
             'status'. 'table' is an agate.Table.
@@ -673,13 +714,15 @@ class BaseAdapter(object):
         # This causes a reference cycle, as dbt.context.runtime.generate()
         # ends up calling get_adapter, so the import has to be here.
         import dbt.context.runtime
-        context = dbt.context.runtime.generate(
+        ctx = dbt.context.runtime.generate(
             macro,
             self.config,
-            manifest,
+            manifest
         )
+        if context:
+            ctx.update(context)
 
-        result = macro.generator(context)()
+        result = macro.generator(ctx)()
         return result
 
     @classmethod

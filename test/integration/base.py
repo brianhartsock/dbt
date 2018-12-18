@@ -452,9 +452,10 @@ class DBTIntegrationTest(unittest.TestCase):
                 char_size = 16777216
         return (table_name, column_name, data_type, char_size)
 
-    def get_table_columns(self, table, schema=None):
+    def get_table_columns(self, table, schema=None, database=None):
         schema = self.unique_schema() if schema is None else schema
-        columns = self.adapter.get_columns_in_table(schema, table)
+        database = self.config.credentials.database if database is None else database
+        columns = self.adapter.get_columns_in_table(database, schema, table)
 
         return sorted(((c.name, c.dtype, c.char_size) for c in columns),
                       key=lambda x: x[0])

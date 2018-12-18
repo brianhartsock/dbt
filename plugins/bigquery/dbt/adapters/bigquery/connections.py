@@ -254,23 +254,23 @@ class BigQueryConnectionManager(BaseConnectionManager):
                                    callback, 'CREATE DAY PARTITIONED TABLE')
 
     @staticmethod
-    def dataset(dataset_name, conn):
-        dataset_ref = conn.handle.dataset(dataset_name)
+    def dataset(dataset_name, conn, project=None):
+        dataset_ref = conn.handle.dataset(dataset_name, project)
         return google.cloud.bigquery.Dataset(dataset_ref)
 
-    def table_ref(self, dataset_name, table_name, conn):
-        dataset = self.dataset(dataset_name, conn)
+    def table_ref(self, dataset_name, table_name, conn, project=None):
+        dataset = self.dataset(dataset_name, conn, project=project)
         return dataset.table(table_name)
 
-    def get_bq_table(self, schema, identifier, conn_name=None):
+    def get_bq_table(self, schema, identifier, conn_name=None, database=None):
         """Get a bigquery table for a schema/model."""
         conn = self.get(conn_name)
-        table_ref = self.table_ref(schema, identifier, conn)
+        table_ref = self.table_ref(schema, identifier, conn, project=database)
         return conn.handle.get_table(table_ref)
 
-    def drop_dataset(self, dataset_name, conn_name=None):
+    def drop_dataset(self, project_name, dataset_name, conn_name=None):
         conn = self.get(conn_name)
-        dataset = self.dataset(dataset_name, conn)
+        dataset = self.dataset(dataset_name, conn, project=project_name)
         client = conn.handle
 
         with self.exception_handler('drop dataset', conn.name):
@@ -278,10 +278,10 @@ class BigQueryConnectionManager(BaseConnectionManager):
                 client.delete_table(table.reference)
             client.delete_dataset(dataset)
 
-    def create_dataset(self, dataset_name, conn_name=None):
+    def create_dataset(self, project_name, dataset_name, conn_name=None):
         conn = self.get(conn_name)
         client = conn.handle
-        dataset = self.dataset(dataset_name, conn)
+        dataset = self.dataset(dataset_name, conn, project=project_name)
 
         # Emulate 'create schema if not exists ...'
         try:

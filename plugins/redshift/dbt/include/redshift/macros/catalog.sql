@@ -3,6 +3,7 @@
   {%- call statement('base_catalog', fetch_result=True) -%}
     with late_binding as (
       select
+        "{{ database }}" as table_database,
         table_schema,
         table_name,
         'LATE BINDING VIEW'::varchar as table_type,
@@ -22,9 +23,10 @@
     tables as (
 
       select
-          table_schema,
-          table_name,
-          table_type
+        "{{ database }}" as table_database,
+        table_schema,
+        table_name,
+        table_type
 
       from information_schema.tables
 
@@ -33,6 +35,7 @@
     table_owners as (
 
         select
+            "{{ database }}" as table_database,
             schemaname as table_schema,
             tablename as table_name,
             tableowner as table_owner
@@ -42,6 +45,7 @@
         union all
 
         select
+            "{{ database }}" as table_database,
             schemaname as table_schema,
             viewname as table_name,
             viewowner as table_owner
@@ -53,6 +57,7 @@
     columns as (
 
         select
+            "{{ database }}" as table_database,
             table_schema,
             table_name,
             null::varchar as table_comment,
@@ -71,7 +76,7 @@
 
         select *
         from tables
-        join columns using (table_schema, table_name)
+        join columns using (table_database, table_schema, table_name)
 
         union all
 
@@ -81,10 +86,10 @@
     )
 
     select *,
-        table_schema || '.' || table_name as table_id
+        table_database || '.' || table_schema || '.' || table_name as table_id
 
     from unioned
-    join table_owners using (table_schema, table_name)
+    join table_owners using (table_database, table_schema, table_name)
 
     where table_schema != 'information_schema'
       and table_schema not like 'pg_%'
@@ -99,7 +104,7 @@
   {%- call statement('extended_catalog', fetch_result=True) -%}
 
     select
-        "schema" || '.' || "table" as table_id,
+        "database" || . || "schema" || '.' || "table" as table_id,
 
         'Encoded'::text as "stats:encoded:label",
         encoded as "stats:encoded:value",
