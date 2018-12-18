@@ -86,20 +86,6 @@ def compiler_warning(model, msg, resource_type='model'):
     )
 
 
-def find_operation_by_name(flat_graph, target_name, target_package):
-    return find_by_name(flat_graph, target_name, target_package,
-                        'macros', [NodeType.Operation])
-
-
-def find_by_name(flat_graph, target_name, target_package, subgraph,
-                 nodetype):
-    return find_in_subgraph_by_name(
-        flat_graph.get(subgraph),
-        target_name,
-        target_package,
-        nodetype)
-
-
 def id_matches(unique_id, target_name, target_package, nodetypes, model):
     """Return True if the unique ID matches the given name, package, and type.
 
